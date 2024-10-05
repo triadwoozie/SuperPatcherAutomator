@@ -1,3 +1,4 @@
+
 # SuperPatcherAutomator
 
 **SuperPatcherAutomator** is an automated Python script designed to simplify the process of preparing Generic System Images (GSIs) for flashing on Samsung devices using Odin3. This comprehensive tool streamlines the entire workflow, from downloading necessary files to compressing and preparing the final output, ensuring an efficient and user-friendly experience for both novice and experienced users.
@@ -8,7 +9,7 @@
 - **LZ4 Compression:** Compresses images to save space and enhance performance during the flashing process.
 - **User Prompts:** Guides users through the process with clear prompts for placing files and instructions for the next steps.
 - **File Management:** Cleans up unnecessary files and moves essential images to the appropriate locations, preventing clutter and confusion.
-- **Integration with SuperPatcherGSI:** Seamlessly runs the SuperPatcherGSI script to modify the `super.img`, preparing it for use with Odin3.
+- **Integration with SuperPatcherGSI:** Seamlessly runs the [SuperPatcherGSI](https://github.com/ChromiumOS-Guy/SuperPatcherGSI) script to modify the `super.img`, preparing it for use with Odin3.
 - **Post-Execution Instructions:** Informs users on the next steps, including how to flash their devices with Odin3.
 
 ## Requirements
@@ -39,6 +40,21 @@
 
 5. **Completion:**
    - Once the script finishes, check the output in the specified directory. You will receive instructions on how to use the generated files with Odin3 to flash your device.
+
+## Acknowledgments
+
+- Special thanks to the [SuperPatcherGSI](https://github.com/ChromiumOS-Guy/SuperPatcherGSI) project for providing the essential functionality needed to modify the `super.img`. This project serves as a core component of **SuperPatcherAutomator**.
+- Thanks to the [LZ4](https://github.com/lz4/lz4) library for providing efficient compression and decompression functionalities.
+
+## Sources
+
+- Using `lpmake` for Linux from [AOSP Master](https://ci.android.com/builds/branches/aosp-master/grid).
+- Using `lpmake` for Windows from [lpmake_and_lpunpack_cygwin](https://github.com/affggh/lpmake_and_lpunpack_cygwin).
+- Using `lpunpack.py` from [lpunpack](https://github.com/unix3dgforce/lpunpack), compiled to .exe for Windows version.
+
+## Fixes
+
+- Ensure you have all the required Python libraries installed. If you encounter any errors related to missing libraries, please install them using pip.
 
 ## Contributing
 
