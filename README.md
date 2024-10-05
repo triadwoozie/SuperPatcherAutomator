@@ -2,6 +2,12 @@
 
 **SuperPatcherAutomator** is an automated Python script designed to simplify the process of preparing Generic System Images (GSIs) for flashing on Samsung devices using Odin3. This comprehensive tool streamlines the entire workflow, from downloading necessary files to compressing and preparing the final output, ensuring an efficient and user-friendly experience for both novice and experienced users.
 
+This script essentially automates the steps outlined in the [XDA Developers guide](https://xdaforums.com/t/guide-custom-how-to-install-custom-rom-using-odin-without-twrp-phh-lineageos.4114435/) for devices that use a super partition. You can follow the later steps in this guide to root the device using [Magisk](https://github.com/topjohnwu/Magisk)
+
+### What is a Super Partition?
+
+A **super partition** is a type of partition layout that combines multiple partitions (like `system`, `vendor`, and `product`) into a single logical unit. This design allows for easier management of space and simplifies the flashing process for custom ROMs. It enhances the efficiency of the Android file system and is increasingly adopted in modern Android devices. For more detailed information, you can refer to the official Android documentation on [dynamic partitions](https://source.android.com/docs/core/ota/dynamic_partitions/implement).
+
 ## Features
 
 - **Automated Downloading:** Downloads the required `vbmeta.img` file from a reliable source, eliminating manual download efforts.
