@@ -48,6 +48,8 @@ A **super partition** is a type of partition layout that combines multiple parti
 
 ## Warning
 
+**Windows Only:** The script only works with Windows for now, this is due to the fact that heimdall did not work for me, and choosing the path of least resistance is preferred.
+
 **Backup Your Data:** Before proceeding with any flashing or modifications, it is highly recommended to back up your device and any important data. Flashing can result in data loss or bricking your device.
 
 **Disclaimer:** The author of this script is not responsible for any damage, data loss, or issues that may arise from using this tool. Proceed at your own risk.
