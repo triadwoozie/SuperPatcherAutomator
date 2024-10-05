@@ -1,4 +1,3 @@
-
 # SuperPatcherAutomator
 
 **SuperPatcherAutomator** is an automated Python script designed to simplify the process of preparing Generic System Images (GSIs) for flashing on Samsung devices using Odin3. This comprehensive tool streamlines the entire workflow, from downloading necessary files to compressing and preparing the final output, ensuring an efficient and user-friendly experience for both novice and experienced users.
@@ -40,6 +39,12 @@
 
 5. **Completion:**
    - Once the script finishes, check the output in the specified directory. You will receive instructions on how to use the generated files with Odin3 to flash your device.
+
+## Warning
+
+**Backup Your Data:** Before proceeding with any flashing or modifications, it is highly recommended to back up your device and any important data. Flashing can result in data loss or bricking your device.
+
+**Disclaimer:** The author of this script is not responsible for any damage, data loss, or issues that may arise from using this tool. Proceed at your own risk.
 
 ## Acknowledgments
 
