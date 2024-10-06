@@ -10,13 +10,12 @@ Super partitions are dynamic containers introduced in Android devices to allow t
 
 ## How It Works
 
-**SuperPatcherAutomator** is available in both Python and Batch script formats, automating each step required to patch, compress, and prepare the system image files for flashing on Android devices with super partitions. Below is a detailed walkthrough of what the program does:
+**SuperPatcherAutomator** automates each step required to patch, compress, and prepare system image files for flashing on Android devices with super partitions. Below is a detailed walkthrough of what the program does:
 
 ### Detailed Step-by-Step Workflow:
 
 1. **Download `vbmeta.img`**:
     - The script starts by downloading `vbmeta.img` from Google’s official server and saves it in a `temp` directory. This file is necessary for flashing Android devices.
-    - The download is handled using `requests` in Python or `bitsadmin` in Batch.
   
 2. **Compress `vbmeta.img` using LZ4**:
     - Once downloaded, the script compresses `vbmeta.img` into `vbmeta.img.lz4` using `lz4.exe`.
@@ -56,31 +55,19 @@ Super partitions are dynamic containers introduced in Android devices to allow t
 13. **Rooting Option**:
     - The script prompts the user whether they want to root their device or not. If the user opts for rooting, it asks for confirmation that the `super.img` has been patched according to the XDA guide. If the patching is confirmed, the script proceeds with flashing. Otherwise, it warns the user to follow the guide first.
   
-14. **Run Batch Script**:
-    - The script then automatically runs `batch.bat`, which handles the final steps of preparing the images and directories for flashing.
-  
-15. **Inform the User About Flashing**:
-    - After `batch.bat` completes, the script informs the user that all necessary files are in the `temp-folder`, and they can use Odin3 to flash their device.
+14. **Inform the User About Flashing**:
+    - The script informs the user that all necessary files are in the `temp-folder`, and they can use Odin3 to flash their device.
 
-16. **Final Clean-Up**:
-    - If `batch.bat` recreated the `temp-folder`, the script leaves it intact with the flashing files, ensuring the user has what they need to proceed.
-
-### Python Version
+### Python Version Usage
 
 1. Make sure Python 3.x is installed.
-2. Place `lz4.exe`, `SuperPatcherGSI.py`, and `batch.bat` in the same directory as the Python script.
+2. Place `lz4.exe`, `SuperPatcherGSI.py`, and any other required files in the same directory as the Python script.
 3. Run the Python script:
    ```bash
    python SuperPatcherAutomator.py
    ```
 4. Follow the prompts to place the extracted AP file into the `temp-folder` and choose whether to root the device.
 5. The script will patch, compress, and move all necessary files automatically.
-
-### Batch Version
-
-1. Ensure `lz4.exe`, `SuperPatcherGSI.py`, and `batch.bat` are in the same directory.
-2. Run the batch script (`SuperPatcherAutomator.bat`) as an administrator.
-3. Follow the prompts to patch and compress the system images, and use Odin3 to flash the device.
 
 ## Sources and Credit
 
