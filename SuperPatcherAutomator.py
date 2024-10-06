@@ -74,67 +74,70 @@ try:
 except subprocess.CalledProcessError as e:
     print(f"Error during extraction: {e}")
 
-# Step 8: Run SuperPatcherGSI.py with specific flags
-super_patcher_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SuperPatcherGSI.py')
-command = ['python', super_patcher_script, '-i', super_img, '-o', 'output.img', '-s', '2']
-
+# Step 8: Run SuperPatcherGSI.py with flags -i super.img -o output.img -s 2
+superpatcher_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SuperPatcherGSI.py')
+command = ['python', superpatcher_script, '-i', super_img, '-o', 'output.img', '-s', '2']
 try:
     subprocess.run(command, check=True)
-    print("SuperPatcherGSI.py script executed successfully.")
+    print(f"SuperPatcherGSI.py executed successfully")
 except subprocess.CalledProcessError as e:
     print(f"Error running SuperPatcherGSI.py: {e}")
 
-# Step 9: Rename output.img to super.img, replacing the old super.img
+# Step 9: Rename output.img to super.img, replacing the existing super.img
 output_img = os.path.join(temp_folder, 'output.img')
 if os.path.exists(super_img):
     os.remove(super_img)
-os.rename(output_img, super_img)
-print(f"Renamed output.img to {super_img}")
+shutil.move(output_img, super_img)
+print(f"Renamed output.img to super.img, replacing old super.img")
 
 # Step 10: Delete the old super.img.lz4 in temp-folder
 if os.path.exists(super_img_lz4):
     os.remove(super_img_lz4)
-print(f"Deleted old super.img.lz4 in {temp_folder}")
+    print(f"Deleted old super.img.lz4 in temp-folder")
 
-# Step 11: Compress the new super.img into super.img.lz4
-super_img_lz4 = os.path.join(temp_folder, 'super.img.lz4')
-command = [lz4_exe, '-B6', '--content-size', super_img, super_img_lz4]
-
+# Step 11: Compress new super.img into super.img.lz4
+new_super_img_lz4 = os.path.join(temp_folder, 'super.img.lz4')
+command = [lz4_exe, '-B6', '--content-size', super_img, new_super_img_lz4]
 try:
     subprocess.run(command, check=True)
-    print(f"Compressed {super_img} to {super_img_lz4}")
+    print(f"New super.img compressed successfully into {new_super_img_lz4}")
 except subprocess.CalledProcessError as e:
     print(f"Error during compression: {e}")
 
-# Ensure old super.img.lz4 is not used (already deleted in Step 10)
-
-# Step 12: Move super.img.lz4 into temp-folder
-shutil.move(super_img_lz4, os.path.join(temp_folder, 'super.img.lz4'))
+# Step 12: Move new super.img.lz4 to temp-folder
+shutil.move(new_super_img_lz4, super_img_lz4)
 print(f"Moved new super.img.lz4 into {temp_folder}")
 
 # Step 13: Delete all .img files in the script directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
-for file_name in os.listdir(script_dir):
-    if file_name.endswith('.img'):
-        os.remove(os.path.join(script_dir, file_name))
-print("Deleted all .img files in the script directory")
+script_directory = os.path.dirname(os.path.abspath(__file__))
+img_files = [f for f in os.listdir(script_directory) if f.endswith('.img')]
+for img_file in img_files:
+    try:
+        os.remove(os.path.join(script_directory, img_file))
+        print(f"Deleted {img_file} from script directory")
+    except Exception as e:
+        print(f"Error deleting {img_file}: {e}")
 
-# Step 14: Ask user if they want to root
-root = input("Do you want to root the device? (yes/no): ").strip().lower()
+# Step 14: Move files from temp-folder to script directory
+for file_name in os.listdir(temp_folder):
+    shutil.move(os.path.join(temp_folder, file_name), script_directory)
+print(f"Moved all files from {temp_folder} to script directory")
 
-if root == 'yes':
-    confirmation = input("Have you patched the file according to the XDA guide? (yes/no): ").strip().lower()
-    if confirmation != 'yes':
-        print("Please patch the file according to the XDA guide, then run the script again.")
+# Step 15: Ask user if they want to root the device
+root_choice = input("Do you want to root the device? (yes/no): ").strip().lower()
+if root_choice == 'yes':
+    patched_confirmation = input("Have you patched the file according to the XDA guide? (yes/no): ").strip().lower()
+    if patched_confirmation != 'yes':
+        print("Please patch the file before proceeding.")
         exit(1)
 
-# Step 15: Run batch.bat
-batch_file = os.path.join(script_dir, 'batch.bat')
+# Step 16: Run batch.bat
+batch_file = os.path.join(script_directory, 'batch.bat')
 try:
-    subprocess.run(batch_file, check=True)
-    print("batch.bat executed successfully.")
+    subprocess.run([batch_file], check=True)
+    print(f"batch.bat executed successfully")
 except subprocess.CalledProcessError as e:
     print(f"Error running batch.bat: {e}")
 
-# Step 16: Inform the user to check temp-folder for flashing files
-print(f"Process complete. Please check the '{temp_folder}' for the files needed to flash your phone using Odin3.")
+# Step 17: Inform user to check temp-folder for flashing files
+print("Process complete. Please check the 'temp-folder' for the necessary files to flash the device using Odin3.")
