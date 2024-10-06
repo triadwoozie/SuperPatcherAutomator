@@ -14,7 +14,7 @@ with open(vbmeta_img, 'wb') as file:
     file.write(response.content)
 print(f"Downloaded vbmeta.img to {vbmeta_img}")
 
-# Step 2: Compress vbmeta.img using lz4.exe
+# Step 2: Compress the vbmeta.img using lz4.exe
 lz4_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lz4.exe')
 vbmeta_img_lz4 = os.path.join(temp_dir, 'vbmeta.img.lz4')
 
@@ -34,7 +34,7 @@ temp_folder = 'temp-folder'
 os.makedirs(temp_folder, exist_ok=True)
 input(f"Please place the extracted AP file for your Samsung model in the folder '{temp_folder}', then press Enter to continue...")
 
-# Step 5: Delete all files except the ones listed in the image
+# Step 5: Delete unnecessary files from temp-folder
 files_to_keep = [
     'boot.img.lz4', 'dtbo.img.lz4', 'recovery.img.lz4', 'scp-verified.img.lz4',
     'spmfw-verified.img.lz4', 'sspm-verified.img.lz4', 'super.img.lz4',
@@ -43,7 +43,6 @@ files_to_keep = [
 ]
 
 all_files = os.listdir(temp_folder)
-
 for file_name in all_files:
     if file_name not in files_to_keep:
         file_path = os.path.join(temp_folder, file_name)
@@ -66,78 +65,77 @@ super_img = os.path.join(temp_folder, 'super.img')
 
 # Command to extract the lz4 file
 command = [lz4_exe, '-d', super_img_lz4, super_img]
-
-# Execute the command to extract super.img.lz4
 try:
     subprocess.run(command, check=True)
     print(f"Extracted: {super_img}")
 except subprocess.CalledProcessError as e:
     print(f"Error during extraction: {e}")
 
-# Step 8: Run SuperPatcherGSI.py with flags -i super.img -o output.img -s 2
+# Step 8: Run SuperPatcherGSI.py to patch the super.img
 superpatcher_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SuperPatcherGSI.py')
 command = ['python', superpatcher_script, '-i', super_img, '-o', 'output.img', '-s', '2']
 try:
     subprocess.run(command, check=True)
-    print(f"SuperPatcherGSI.py executed successfully")
+    print("SuperPatcherGSI.py executed successfully.")
 except subprocess.CalledProcessError as e:
     print(f"Error running SuperPatcherGSI.py: {e}")
 
-# Step 9: Rename output.img to super.img, replacing the existing super.img
+# Step 9: Rename output.img to super.img
 output_img = os.path.join(temp_folder, 'output.img')
-if os.path.exists(super_img):
-    os.remove(super_img)
-shutil.move(output_img, super_img)
-print(f"Renamed output.img to super.img, replacing old super.img")
+if os.path.exists(output_img):
+    super_img = os.path.join(temp_folder, 'super.img')
+    try:
+        shutil.move(output_img, super_img)
+        print(f"Renamed output.img to super.img at {super_img}")
+    except Exception as e:
+        print(f"Error renaming output.img to super.img: {e}")
+else:
+    print(f"Error: output.img not found at {output_img}")
 
-# Step 10: Delete the old super.img.lz4 in temp-folder
+# Step 10: Delete old super.img.lz4 in temp-folder
 if os.path.exists(super_img_lz4):
     os.remove(super_img_lz4)
-    print(f"Deleted old super.img.lz4 in temp-folder")
+    print(f"Deleted old super.img.lz4 from {temp_folder}")
 
 # Step 11: Compress new super.img into super.img.lz4
 new_super_img_lz4 = os.path.join(temp_folder, 'super.img.lz4')
 command = [lz4_exe, '-B6', '--content-size', super_img, new_super_img_lz4]
 try:
     subprocess.run(command, check=True)
-    print(f"New super.img compressed successfully into {new_super_img_lz4}")
+    print(f"Compressed new super.img to {new_super_img_lz4}")
 except subprocess.CalledProcessError as e:
     print(f"Error during compression: {e}")
 
-# Step 12: Move new super.img.lz4 to temp-folder
+# Step 12: Move the new super.img.lz4 to temp-folder
 shutil.move(new_super_img_lz4, super_img_lz4)
-print(f"Moved new super.img.lz4 into {temp_folder}")
+print(f"Moved the new super.img.lz4 to {temp_folder}")
 
-# Step 13: Delete all .img files in the script directory
-script_directory = os.path.dirname(os.path.abspath(__file__))
-img_files = [f for f in os.listdir(script_directory) if f.endswith('.img')]
-for img_file in img_files:
-    try:
-        os.remove(os.path.join(script_directory, img_file))
-        print(f"Deleted {img_file} from script directory")
-    except Exception as e:
-        print(f"Error deleting {img_file}: {e}")
-
-# Step 14: Move files from temp-folder to script directory
-for file_name in os.listdir(temp_folder):
-    shutil.move(os.path.join(temp_folder, file_name), script_directory)
-print(f"Moved all files from {temp_folder} to script directory")
-
-# Step 15: Ask user if they want to root the device
-root_choice = input("Do you want to root the device? (yes/no): ").strip().lower()
+# Step 13: Prompt user about rooting
+root_choice = input("Do you want to root the device? (yes/no): ").lower()
 if root_choice == 'yes':
-    patched_confirmation = input("Have you patched the file according to the XDA guide? (yes/no): ").strip().lower()
-    if patched_confirmation != 'yes':
-        print("Please patch the file before proceeding.")
-        exit(1)
+    patched_file_confirm = input("Have you patched the file according to the XDA guide? (yes/no): ").lower()
+    if patched_file_confirm != 'yes':
+        print("You need to patch the file as per the XDA guide. Exiting.")
+        exit()
+    else:
+        print("Proceeding with root.")
+else:
+    print("Proceeding without rooting.")
 
-# Step 16: Run batch.bat
-batch_file = os.path.join(script_directory, 'batch.bat')
+# Step 14: Move all files from temp-folder to script directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+for file_name in os.listdir(temp_folder):
+    file_path = os.path.join(temp_folder, file_name)
+    shutil.move(file_path, os.path.join(script_dir, file_name))
+print(f"Moved all files from {temp_folder} to {script_dir}")
+
+# Step 15: Run batch.bat
+batch_file = os.path.join(script_dir, 'batch.bat')
 try:
     subprocess.run([batch_file], check=True)
-    print(f"batch.bat executed successfully")
+    print("batch.bat executed successfully.")
 except subprocess.CalledProcessError as e:
     print(f"Error running batch.bat: {e}")
 
-# Step 17: Inform user to check temp-folder for flashing files
-print("Process complete. Please check the 'temp-folder' for the necessary files to flash the device using Odin3.")
+# Step 16: Inform user about flashing
+print("Check the temp-folder for the generated files and use Odin3 to flash your device.")
