@@ -2,140 +2,161 @@ import os
 import requests
 import subprocess
 import shutil
+import logging
 
-# Step 1: Download vbmeta.img file
-url = "https://dl.google.com/developers/android/qt/images/gsi/vbmeta.img"
-temp_dir = 'temp'
-os.makedirs(temp_dir, exist_ok=True)
-vbmeta_img = os.path.join(temp_dir, 'vbmeta.img')
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
-response = requests.get(url)
-with open(vbmeta_img, 'wb') as file:
-    file.write(response.content)
-print(f"Downloaded vbmeta.img to {vbmeta_img}")
+def download_file(url, dest):
+    response = requests.get(url)
+    with open(dest, 'wb') as file:
+        file.write(response.content)
+    logging.info(f"Downloaded {dest}")
 
-# Step 2: Compress the vbmeta.img using lz4.exe
-lz4_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lz4.exe')
-vbmeta_img_lz4 = os.path.join(temp_dir, 'vbmeta.img.lz4')
-
-command = [lz4_exe, '-B6', '--content-size', vbmeta_img, vbmeta_img_lz4]
-try:
+def compress_file(input_file, output_file, lz4_exe):
+    command = [lz4_exe, '-B6', '--content-size', input_file, output_file]
     subprocess.run(command, check=True)
-    print(f"Compression successful: {vbmeta_img_lz4}")
-except subprocess.CalledProcessError as e:
-    print(f"Error during compression: {e}")
+    logging.info(f"Compressed: {output_file}")
 
-# Step 3: Delete the original vbmeta.img file
-os.remove(vbmeta_img)
-print(f"Deleted original file: {vbmeta_img}")
-
-# Step 4: Create temp-folder and prompt user
-temp_folder = 'temp-folder'
-os.makedirs(temp_folder, exist_ok=True)
-input(f"Please place the extracted AP file for your Samsung model in the folder '{temp_folder}', then press Enter to continue...")
-
-# Step 5: Delete unnecessary files from temp-folder
-files_to_keep = [
-    'boot.img.lz4', 'dtbo.img.lz4', 'recovery.img.lz4', 'scp-verified.img.lz4',
-    'spmfw-verified.img.lz4', 'sspm-verified.img.lz4', 'super.img.lz4',
-    'tee-verified.img.lz4', 'tzar.img.lz4', 'userdata.img.lz4',
-    'vbmeta.img.lz4', 'vbmeta_system.img.lz4'
-]
-
-all_files = os.listdir(temp_folder)
-for file_name in all_files:
-    if file_name not in files_to_keep:
-        file_path = os.path.join(temp_folder, file_name)
-        try:
-            os.remove(file_path)
-            print(f"Deleted: {file_name}")
-        except Exception as e:
-            print(f"Error deleting {file_name}: {e}")
-
-# Step 6: Replace vbmeta.img.lz4 in temp-folder with the one downloaded
-vbmeta_temp = os.path.join(temp_folder, 'vbmeta.img.lz4')
-if os.path.exists(vbmeta_temp):
-    os.remove(vbmeta_temp)
-shutil.move(vbmeta_img_lz4, vbmeta_temp)
-print(f"Replaced vbmeta.img.lz4 in {temp_folder}")
-
-# Step 7: Extract super.img.lz4 to create super.img
-super_img_lz4 = os.path.join(temp_folder, 'super.img.lz4')
-super_img = os.path.join(temp_folder, 'super.img')
-
-# Command to extract the lz4 file
-command = [lz4_exe, '-d', super_img_lz4, super_img]
-try:
-    subprocess.run(command, check=True)
-    print(f"Extracted: {super_img}")
-except subprocess.CalledProcessError as e:
-    print(f"Error during extraction: {e}")
-
-# Step 8: Run SuperPatcherGSI.py to patch the super.img
-superpatcher_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'SuperPatcherGSI.py')
-command = ['python', superpatcher_script, '-i', super_img, '-o', 'output.img', '-s', '2']
-try:
-    subprocess.run(command, check=True)
-    print("SuperPatcherGSI.py executed successfully.")
-except subprocess.CalledProcessError as e:
-    print(f"Error running SuperPatcherGSI.py: {e}")
-
-# Step 9: Rename output.img to super.img
-output_img = os.path.join(temp_folder, 'output.img')
-if os.path.exists(output_img):
-    super_img = os.path.join(temp_folder, 'super.img')
-    try:
-        shutil.move(output_img, super_img)
-        print(f"Renamed output.img to super.img at {super_img}")
-    except Exception as e:
-        print(f"Error renaming output.img to super.img: {e}")
-else:
-    print(f"Error: output.img not found at {output_img}")
-
-# Step 10: Delete old super.img.lz4 in temp-folder
-if os.path.exists(super_img_lz4):
-    os.remove(super_img_lz4)
-    print(f"Deleted old super.img.lz4 from {temp_folder}")
-
-# Step 11: Compress new super.img into super.img.lz4
-new_super_img_lz4 = os.path.join(temp_folder, 'super.img.lz4')
-command = [lz4_exe, '-B6', '--content-size', super_img, new_super_img_lz4]
-try:
-    subprocess.run(command, check=True)
-    print(f"Compressed new super.img to {new_super_img_lz4}")
-except subprocess.CalledProcessError as e:
-    print(f"Error during compression: {e}")
-
-# Step 12: Move the new super.img.lz4 to temp-folder
-shutil.move(new_super_img_lz4, super_img_lz4)
-print(f"Moved the new super.img.lz4 to {temp_folder}")
-
-# Step 13: Prompt user about rooting
-root_choice = input("Do you want to root the device? (yes/no): ").lower()
-if root_choice == 'yes':
-    patched_file_confirm = input("Have you patched the file according to the XDA guide? (yes/no): ").lower()
-    if patched_file_confirm != 'yes':
-        print("You need to patch the file as per the XDA guide. Exiting.")
-        exit()
+def remove_file(file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+        logging.info(f"Deleted: {file_path}")
     else:
-        print("Proceeding with root.")
-else:
-    print("Proceeding without rooting.")
+        logging.warning(f"File not found for deletion: {file_path}")
 
-# Step 14: Move all files from temp-folder to script directory
-script_dir = os.path.dirname(os.path.abspath(__file__))
-for file_name in os.listdir(temp_folder):
-    file_path = os.path.join(temp_folder, file_name)
-    shutil.move(file_path, os.path.join(script_dir, file_name))
-print(f"Moved all files from {temp_folder} to {script_dir}")
+def keep_files(temp_folder, files_to_keep):
+    all_files = os.listdir(temp_folder)
+    for file_name in all_files:
+        if file_name not in files_to_keep:
+            remove_file(os.path.join(temp_folder, file_name))
 
-# Step 15: Run batch.bat
-batch_file = os.path.join(script_dir, 'batch.bat')
-try:
-    subprocess.run([batch_file], check=True)
-    print("batch.bat executed successfully.")
-except subprocess.CalledProcessError as e:
-    print(f"Error running batch.bat: {e}")
+def replace_file(src, dst):
+    if os.path.exists(dst):
+        os.remove(dst)
+    shutil.move(src, dst)
+    logging.info(f"Replaced: {dst}")
 
-# Step 16: Inform user about flashing
-print("Check the temp-folder for the generated files and use Odin3 to flash your device.")
+def extract_file(lz4_exe, lz4_file, output_file):
+    command = [lz4_exe, '-d', lz4_file, output_file]
+    subprocess.run(command, check=True)
+    logging.info(f"Extracted: {output_file}")
+
+def move_file_to_script_dir(file_name):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    source_path = os.path.join('temp-folder', file_name)
+    destination_path = os.path.join(current_dir, file_name)
+
+    if os.path.exists(source_path):
+        shutil.move(source_path, destination_path)
+        logging.info(f"Moved {file_name} to {current_dir}")
+    else:
+        logging.warning(f"{file_name} not found in temp-folder for moving.")
+
+def run_super_patcher(super_img):
+    output_img = 'output.img'
+    command = ['python', 'SuperPatcherGSI.py', '-i', super_img, '-o', output_img, '-s', '2']
+    
+    try:
+        subprocess.run(command, check=True)
+        logging.info(f"Ran SuperPatcherGSI.py with input: {super_img}, output: {output_img}")
+        # Step to rename output.img to super.img
+        rename_and_compress_output(output_img)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error running SuperPatcherGSI.py: {e}")
+
+def rename_and_compress_output(output_img):
+    super_img = 'super.img'
+    lz4_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lz4.exe')
+    temp_folder = 'temp-folder'
+    super_img_lz4 = os.path.join(temp_folder, 'super.img.lz4')
+    
+    # Rename output.img to super.img
+    if os.path.exists(super_img):
+        remove_file(super_img)  # Remove existing super.img if it exists
+    shutil.move(output_img, super_img)
+    logging.info(f"Renamed {output_img} to {super_img}")
+    
+    # Compress super.img to super.img.lz4
+    compress_file(super_img, super_img_lz4, lz4_exe)
+    
+    # Move the compressed file into the temp-folder
+    replace_file(super_img_lz4, os.path.join(temp_folder, 'super.img.lz4'))
+
+def move_files_out_of_temp_folder(temp_folder):
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    for file_name in os.listdir(temp_folder):
+        source_path = os.path.join(temp_folder, file_name)
+        destination_path = os.path.join(current_dir, file_name)
+        shutil.move(source_path, destination_path)
+        logging.info(f"Moved {file_name} to {current_dir}")
+    
+    # Delete the temp-folder after moving the files
+    shutil.rmtree(temp_folder)
+    logging.info(f"Deleted temporary folder: {temp_folder}")
+
+def run_batch_file():
+    batch_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'batch.bat')
+    try:
+        subprocess.run(batch_file, check=True)
+        logging.info(f"Executed batch file: {batch_file}")
+        
+        # Inform the user to check the temp-folder for the generated files
+        print("\nPlease check the temp-folder for the generated files.")
+        print("Use the generated file to flash your phone using Odin3.")
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error running batch file: {e}")
+
+def check_root():
+    response = input("Do you want to root the device? (yes/no): ").strip().lower()
+    if response == "yes":
+        patched_file_response = input("Have you patched the file according to the XDA guide? (yes/no): ").strip().lower()
+        if patched_file_response != "yes":
+            logging.warning("Rooting is skipped because the file was not patched according to the guide.")
+            return False
+    return True
+
+def main():
+    if not check_root():
+        logging.info("Skipping rooting process.")
+        
+    url = "https://dl.google.com/developers/android/qt/images/gsi/vbmeta.img"
+    temp_dir = 'temp'
+    os.makedirs(temp_dir, exist_ok=True)
+    vbmeta_img = os.path.join(temp_dir, 'vbmeta.img')
+    download_file(url, vbmeta_img)
+    lz4_exe = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lz4.exe')
+    vbmeta_img_lz4 = os.path.join(temp_dir, 'vbmeta.img.lz4')
+    compress_file(vbmeta_img, vbmeta_img_lz4, lz4_exe)
+    remove_file(vbmeta_img)
+    temp_folder = 'temp-folder'
+    os.makedirs(temp_folder, exist_ok=True)
+    input(f"Please place the extracted AP file for your Samsung model in the folder '{temp_folder}', then press Enter to continue...")
+    
+    files_to_keep = [
+        'boot.img.lz4', 'dtbo.img.lz4', 'recovery.img.lz4', 'scp-verified.img.lz4',
+        'spmfw-verified.img.lz4', 'sspm-verified.img.lz4', 'super.img.lz4',
+        'tee-verified.img.lz4', 'tzar.img.lz4', 'userdata.img.lz4',
+        'vbmeta.img.lz4', 'vbmeta_system.img.lz4'
+    ]
+    keep_files(temp_folder, files_to_keep)
+    vbmeta_temp = os.path.join(temp_folder, 'vbmeta.img.lz4')
+    replace_file(vbmeta_img_lz4, vbmeta_temp)
+    super_img_lz4 = os.path.join(temp_folder, 'super.img.lz4')
+    super_img = os.path.join(temp_folder, 'super.img')
+    extract_file(lz4_exe, super_img_lz4, super_img)
+    
+    # Step to move system.img to the script's directory
+    move_file_to_script_dir('system.img')
+    
+    # Step to run SuperPatcherGSI.py with the super.img
+    run_super_patcher(super_img)
+    
+    # Step to move all files from temp-folder to the script's directory
+    move_files_out_of_temp_folder(temp_folder)
+    
+    # Step to run batch.bat
+    run_batch_file()
+
+if __name__ == "__main__":
+    main()
