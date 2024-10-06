@@ -1,78 +1,89 @@
-# SuperPatcherAutomator
+SuperPatcherAutomator
 
-**SuperPatcherAutomator** is an automated Python script designed to simplify the process of preparing Generic System Images (GSIs) for flashing on Samsung devices using Odin3. This comprehensive tool streamlines the entire workflow, from downloading necessary files to compressing and preparing the final output, ensuring an efficient and user-friendly experience for both novice and experienced users.
+SuperPatcherAutomator is a comprehensive tool designed to streamline and automate the process of preparing system images for devices with dynamic super partitions, simplifying custom ROM flashing and optional rooting via Odin3. This tool eliminates many of the manual steps involved in patching system images and handling super.img files, particularly on Samsung devices.
 
-This script essentially automates the steps outlined in the [XDA Developers guide](https://xdaforums.com/t/guide-custom-how-to-install-custom-rom-using-odin-without-twrp-phh-lineageos.4114435/) for devices that use a super partition. You can follow the later steps in this guide to root the device using [Magisk](https://github.com/topjohnwu/Magisk)
+It automates key steps of the XDA Guide for devices using super partitions, providing a more seamless experience for users looking to customize their Android devices.
 
-### What is a Super Partition?
+What is a Super Partition?
 
-A **super partition** is a type of partition layout that combines multiple partitions (like `system`, `vendor`, and `product`) into a single logical unit. This design allows for easier management of space and simplifies the flashing process for custom ROMs. It enhances the efficiency of the Android file system and is increasingly adopted in modern Android devices. For more detailed information, you can refer to the official Android documentation on [dynamic partitions](https://source.android.com/docs/core/ota/dynamic_partitions/implement).
+Super partitions are dynamic containers introduced in Android devices to allow the resizing of partitions like system, vendor, and product without affecting the overall partition structure. This flexibility is key for modern Android devices. For more information on super partitions, check out the official Android documentation here.
 
-## Features
+How It Works
 
-- **Automated Downloading:** Downloads the required `vbmeta.img` file from a reliable source, eliminating manual download efforts.
-- **LZ4 Compression:** Compresses images to save space and enhance performance during the flashing process.
-- **User Prompts:** Guides users through the process with clear prompts for placing files and instructions for the next steps.
-- **File Management:** Cleans up unnecessary files and moves essential images to the appropriate locations, preventing clutter and confusion.
-- **Integration with SuperPatcherGSI:** Seamlessly runs the [SuperPatcherGSI](https://github.com/ChromiumOS-Guy/SuperPatcherGSI) script to modify the `super.img`, preparing it for use with Odin3.
-- **Post-Execution Instructions:** Informs users on the next steps, including how to flash their devices with Odin3.
+SuperPatcherAutomator is available in both Python and Batch script formats, automating each step required to patch, compress, and prepare the system image files for flashing on Android devices with super partitions. Below is a detailed walkthrough of what the program does:
 
-## Requirements
+Detailed Step-by-Step Workflow:
 
-- **Python 3.x:** Ensure you have Python installed on your machine.
-- **LZ4 Executable:** Download and place `lz4.exe` in the same directory as the script.
-- **SuperPatcherGSI.py:** Include this script in the same directory to handle image patching.
-- **Internet Access:** Required for downloading the necessary files.
+	1.	Download vbmeta.img:
+	•	The script starts by downloading vbmeta.img from Google’s official server and saves it in a temp directory. This file is necessary for flashing Android devices.
+	•	The download is handled using requests in Python or bitsadmin in Batch.
+	2.	Compress vbmeta.img using LZ4:
+	•	Once downloaded, the script compresses vbmeta.img into vbmeta.img.lz4 using lz4.exe.
+	•	The LZ4 compression tool is crucial for handling .img files in formats required by Odin3 and other flashing tools.
+	3.	Clean Up Unnecessary Files:
+	•	The script will delete the original uncompressed vbmeta.img after compression to ensure only necessary files are kept.
+	4.	User Interaction for Placing Files:
+	•	The script prompts the user to place their extracted AP file for the device into a temp-folder directory. This file contains all the essential components of the system images, such as boot, recovery, and super images.
+	5.	Delete Unnecessary .img Files:
+	•	It then scans the temp-folder and deletes any file that isn’t on a list of critical .img.lz4 files, such as boot.img.lz4, super.img.lz4, and others necessary for flashing.
+	6.	Replace vbmeta.img.lz4:
+	•	The previously downloaded and compressed vbmeta.img.lz4 is copied into the temp-folder, replacing any existing version of vbmeta.img.lz4 to ensure the correct file is used during flashing.
+	7.	Extract super.img.lz4:
+	•	The script decompresses super.img.lz4 into super.img, preparing it for further processing and patching.
+	8.	Run SuperPatcherGSI:
+	•	SuperPatcherGSI.py is executed with specific flags (-i super.img -o output.img -s 2), which patches the super.img based on the user’s custom ROM and device.
+	•	This step automates a previously manual process of modifying the super partition for compatibility with custom ROMs and GSI (Generic System Image).
+	9.	Rename and Replace super.img:
+	•	The patched output.img from SuperPatcherGSI is renamed to super.img, replacing the previous version. The script ensures that the patched image is used in all subsequent steps.
+	10.	Delete Old and Compress New super.img.lz4:
+	•	The script deletes any existing super.img.lz4 in the temp folder and compresses the newly patched super.img into super.img.lz4. This is essential for flashing, as Odin3 expects .lz4 compressed images.
+	11.	Delete Old .img Files:
+	•	After the patched super.img.lz4 is prepared, all the original .img files in the script directory are deleted to avoid confusion and ensure only the patched files remain.
+	12.	Move Files to Script Directory:
+	•	The script moves all necessary files from the temp-folder back to the directory where the script is located, consolidating the files needed for the next steps.
+	13.	Rooting Option:
+	•	The script prompts the user whether they want to root their device or not. If the user opts for rooting, it asks for confirmation that the super.img has been patched according to the XDA guide. If the patching is confirmed, the script proceeds with flashing. Otherwise, it warns the user to follow the guide first.
+	14.	Run Batch Script:
+	•	The script then automatically runs batch.bat, which handles the final steps of preparing the images and directories for flashing.
+	15.	Inform the User About Flashing:
+	•	After batch.bat completes, the script informs the user that all necessary files are in the temp-folder, and they can use Odin3 to flash their device.
+	16.	Final Clean-Up:
+	•	If batch.bat recreated the temp-folder, the script leaves it intact with the flashing files, ensuring the user has what they need to proceed.
 
-## Usage
+Python Version
 
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/yourusername/SuperPatcherAutomator.git
-   cd SuperPatcherAutomator
-   ```
+	1.	Make sure Python 3.x is installed.
+	2.	Place lz4.exe, SuperPatcherGSI.py, and batch.bat in the same directory as the Python script.
+	3.	Run the Python script:
 
-2. **Prepare Required Files:**
-   - Ensure `lz4.exe` and `SuperPatcherGSI.py` are present in the same directory as the script.
+python SuperPatcherAutomator.py
 
-3. **Run the Script:**
-   ```bash
-   python SuperPatcherAutomator.py
-   ```
 
-4. **Follow Prompts:**
-   - The script will prompt you to place the extracted AP file for your Samsung model in a designated folder. Follow the instructions carefully.
+	4.	Follow the prompts to place the extracted AP file into the temp-folder and choose whether to root the device.
+	5.	The script will patch, compress, and move all necessary files automatically.
 
-5. **Completion:**
-   - Once the script finishes, check the output in the specified directory. You will receive instructions on how to use the generated files with Odin3 to flash your device.
+Batch Version
 
-## Warning
+	1.	Ensure lz4.exe, SuperPatcherGSI.py, and batch.bat are in the same directory.
+	2.	Run the batch script (SuperPatcherAutomator.bat) as an administrator.
+	3.	Follow the prompts to patch and compress the system images, and use Odin3 to flash the device.
 
-**Windows Only:** The script only works with Windows for now, this is due to the fact that heimdall did not work for me, and choosing the path of least resistance is preferred.
+Sources and Credit
 
-**Backup Your Data:** Before proceeding with any flashing or modifications, it is highly recommended to back up your device and any important data. Flashing can result in data loss or bricking your device.
+	•	SuperPatcherGSI: Special thanks to SuperPatcherGSI for the tool used to patch super.img.
+	•	LZ4: Compression and decompression are performed using LZ4.
+	•	lpmake for Linux: Obtained from AOSP-master builds.
+	•	lpmake for Windows: From lpmake Windows version.
+	•	lpunpack.py: Lpunpack project, compiled to .exe for the Windows version.
 
-**Disclaimer:** The author of this script is not responsible for any damage, data loss, or issues that may arise from using this tool. Proceed at your own risk.
+Fixes and Issues
 
-## Acknowledgments
+Ensure all required Python libraries are installed before running the Python script. The program uses standard libraries, but if you encounter any issues with missing dependencies, install them via pip.
 
-- Special thanks to the [SuperPatcherGSI](https://github.com/ChromiumOS-Guy/SuperPatcherGSI) project for providing the essential functionality needed to modify the `super.img`. This project serves as a core component of **SuperPatcherAutomator**.
-- Thanks to the [LZ4](https://github.com/lz4/lz4) library for providing efficient compression and decompression functionalities.
+Warning
 
-## Sources
+Backup your data! This script modifies system partitions and can potentially brick your device if not used correctly. I am not responsible for any damage to your device. Follow the instructions carefully and proceed at your own risk.
 
-- Using `lpmake` for Linux from [AOSP Master](https://ci.android.com/builds/branches/aosp-master/grid).
-- Using `lpmake` for Windows from [lpmake_and_lpunpack_cygwin](https://github.com/affggh/lpmake_and_lpunpack_cygwin).
-- Using `lpunpack.py` from [lpunpack](https://github.com/unix3dgforce/lpunpack), compiled to .exe for Windows version.
+Guide Automation
 
-## Fixes
-
-- Ensure you have all the required Python libraries installed. If you encounter any errors related to missing libraries, please install them using pip.
-
-## Contributing
-
-Contributions are welcome! If you encounter any issues or have suggestions for enhancements, please open an issue or submit a pull request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This tool automates many steps of the XDA Guide for devices with super partitions, allowing users to flash custom ROMs without the need for TWRP.
