@@ -54,13 +54,13 @@ def move_file_to_script_dir(file_name):
         logging.warning(f"{file_name} not found in temp-folder for moving.")
 
 def run_super_patcher(super_img):
-    output_img = 'output.img'
+    output_img = 'super.new.img'
     command = ['python', 'SuperPatcherGSI.py', '-i', super_img, '-o', output_img, '-s', '2']
     
     try:
         subprocess.run(command, check=True)
         logging.info(f"Ran SuperPatcherGSI.py with input: {super_img}, output: {output_img}")
-        # Step to rename output.img to super.img
+        # Step to rename super.new.img to super.img
         rename_and_compress_output(output_img)
     except subprocess.CalledProcessError as e:
         logging.error(f"Error running SuperPatcherGSI.py: {e}")
@@ -71,7 +71,7 @@ def rename_and_compress_output(output_img):
     temp_folder = 'temp-folder'
     super_img_lz4 = os.path.join(temp_folder, 'super.img.lz4')
     
-    # Rename output.img to super.img
+    # Rename super.new.img to super.img
     if os.path.exists(super_img):
         remove_file(super_img)  # Remove existing super.img if it exists
     shutil.move(output_img, super_img)
